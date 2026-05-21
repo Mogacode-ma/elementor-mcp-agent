@@ -1,0 +1,62 @@
+{
+  "name": "elementor-mcp-agent",
+  "version": "0.1.0",
+  "mcpName": "io.github.Mogacode-ma/elementor-mcp-agent",
+  "description": "Agentic MCP server for WordPress Elementor — multi-site management, safe Elementor data editing, template import/export, CSS flush, version tracking. Built for agencies running many client sites.",
+  "type": "module",
+  "main": "./dist/server.js",
+  "bin": {
+    "elementor-mcp-agent": "dist/server.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "ARCHITECTURE.md",
+    "resources"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/server.js",
+    "docs:fetch": "tsx scripts/fetch-elementor-docs.ts",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run test && npm run build"
+  },
+  "keywords": ["mcp", "model-context-protocol", "elementor", "wordpress", "claude", "anthropic", "agency", "multi-site"],
+  "author": "MogaCode <hello@mogacode.ma>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mogacode-ma/elementor-mcp-agent.git"
+  },
+  "homepage": "https://github.com/Mogacode-ma/elementor-mcp-agent",
+  "engines": { "node": ">=18.0.0" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "pino": "^9.0.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.2.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "vitest": "^2.0.0"
+  }
+}

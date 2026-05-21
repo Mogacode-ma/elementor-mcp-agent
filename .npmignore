@@ -1,0 +1,11 @@
+src/
+tests/
+scripts/
+.github/
+.eslintrc.cjs
+.prettierrc
+tsconfig.json
+tsup.config.ts
+coverage/
+*.log
+.env*

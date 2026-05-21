@@ -1,0 +1,41 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Mogacode-ma/elementor-mcp-agent",
+  "description": "Agency-grade MCP for WordPress Elementor — multi-site, safe edits, templates, versions.",
+  "repository": {
+    "url": "https://github.com/Mogacode-ma/elementor-mcp-agent",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "elementor-mcp-agent",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        {
+          "name": "ELEMENTOR_MCP_SITES",
+          "description": "JSON array of site objects. Each: {id, url, username, application_password}. See README.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "ELEMENTOR_MCP_CONFIG_PATH",
+          "description": "Alternative: path to a JSON config file. README has the schema.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "ELEMENTOR_MCP_DEFAULT_SITE_ID",
+          "description": "Optional default site id when a tool is called without site_id.",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
