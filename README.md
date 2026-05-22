@@ -9,6 +9,20 @@ Built for agencies running many client sites on Elementor / Elementor Pro who wa
 
 ---
 
+## How this was built
+
+elementor-mcp-agent was built end-to-end with Claude Code over ~48 hours. The process is intentionally open:
+
+- Architecture, code, tests, docs — all generated through Claude Code pair-programming sessions
+- The 7 bugs documented in [this post-mortem](https://dev.to/mogacode/7-bugs-i-caught-in-my-mcp-server-before-publishing-and-why-i-almost-shipped-a-data-corruption-5dfd) were caught in real E2E testing against a live WordPress + Elementor install, not after the fact
+- v1.2's post-write verification pattern was shipped 2 hours after a reader's comment ([Mads Hansen on Dev.to](https://dev.to/mogacode/7-bugs-i-caught-in-my-mcp-server-before-publishing-and-why-i-almost-shipped-a-data-corruption-5dfd/comments)) — the changelog credits the source
+
+This isn't vibe-coded software thrown over the wall. Every release ran through lint + typecheck + 27 unit tests + (for v1.0) full E2E against a real WordPress install before publishing. The MCP itself hardcodes guardrails that prevent the model from making destructive WP-CLI calls.
+
+I run a small WordPress agency and use this tool every day on client sites. If you're skeptical about agentic codegen for production infrastructure, the entire commit history is in the open — judge for yourself.
+
+---
+
 ## Why this exists
 
 There are 25+ WordPress MCP servers on GitHub today. None targets the **agency multi-site workflow** with:
