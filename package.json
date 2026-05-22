@@ -1,8 +1,8 @@
 {
   "name": "elementor-mcp-agent",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "mcpName": "io.github.Mogacode-ma/elementor-mcp-agent",
-  "description": "Agentic MCP server for WordPress Elementor — multi-site management, safe Elementor data editing, template import/export, CSS flush, version tracking. Built for agencies running many client sites.",
+  "description": "Agentic MCP server for WordPress Elementor \u2014 multi-site management, safe Elementor data editing, template import/export, CSS flush, version tracking. Built for agencies running many client sites.",
   "type": "module",
   "main": "./dist/server.js",
   "bin": {
@@ -31,7 +31,16 @@
     "docs:fetch": "tsx scripts/fetch-elementor-docs.ts",
     "prepublishOnly": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
-  "keywords": ["mcp", "model-context-protocol", "elementor", "wordpress", "claude", "anthropic", "agency", "multi-site"],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "elementor",
+    "wordpress",
+    "claude",
+    "anthropic",
+    "agency",
+    "multi-site"
+  ],
   "author": "MogaCode <hello@mogacode.ma>",
   "license": "MIT",
   "repository": {
@@ -39,7 +48,9 @@
     "url": "https://github.com/Mogacode-ma/elementor-mcp-agent.git"
   },
   "homepage": "https://github.com/Mogacode-ma/elementor-mcp-agent",
-  "engines": { "node": ">=18.0.0" },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "pino": "^9.0.0",

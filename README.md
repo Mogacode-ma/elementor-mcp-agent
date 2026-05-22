@@ -3,29 +3,23 @@
 [![npm version](https://img.shields.io/npm/v/elementor-mcp-agent.svg)](https://www.npmjs.com/package/elementor-mcp-agent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-> **Agency-grade MCP server for WordPress Elementor.** Multi-site management, safe Elementor data editing with backup + dry-run + CSS-flush, template export/import across sites, version tracking, and a curated Elementor docs corpus exposed as MCP resources.
+> **Agency-grade MCP server for WordPress Elementor.** Multi-site management, safe Elementor edits with backup + auto-rollback + CSS flush, template export/import, global widget detection, screenshots, WP-CLI escape hatch.
 
-Built for agencies running many client sites on Elementor / Elementor Pro who want Claude (or any MCP client) to drive the toil — without breaking pages.
+Built for agencies running many client sites on Elementor / Elementor Pro who want Claude (or any MCP client) to drive the toil — **without breaking pages**.
 
 ---
 
 ## Why this exists
 
-There are ~25 WordPress MCP servers on GitHub today. None target the **agency** use case:
+There are 25+ WordPress MCP servers on GitHub today. None targets the **agency multi-site workflow** with:
 
-- **Multi-site** — list, ping, and act on a pool of sites in one prompt.
-- **Elementor-aware** — understands `_elementor_data` structure, not just generic WP REST.
-- **Defensive editing** — auto-backup before any change, dry-run + confirmation token for destructive ops, CSS regeneration on save.
-- **Cross-site template sync** — export from staging, import on every client site in one shot.
-- **Version oversight** — see who's running which Elementor / Elementor Pro version across the whole fleet.
-
-This MCP starts with these four pillars and grows from there.
-
----
-
-## ⚠️ Status: early days
-
-v0.1.0 is shipped end-to-end (CI green, 14 tests passing, npm + MCP Registry listed) but the tool surface is intentionally focused. Expect rapid iteration. Don't run destructive operations on production without testing on staging first.
+- **Real backup before every edit** (postmeta via WP-CLI when SSH available, JSON file fallback — never silently lost)
+- **Two-call confirmation** for any destructive op (TTL 60s)
+- **JSON validation + auto-rollback** if an edit produces invalid Elementor data
+- **3-level CSS flush fallback** (REST → wp-cli native → option/meta delete → re-save)
+- **Global widget awareness** — preflight check warns if a page references shared widgets
+- **WP-CLI escape hatch** for everything the REST API can't do safely
+- **Screenshots** via headless Chrome (no puppeteer dep)
 
 ---
 
@@ -35,59 +29,31 @@ v0.1.0 is shipped end-to-end (CI green, 14 tests passing, npm + MCP Registry lis
 npx -y elementor-mcp-agent
 ```
 
-Or globally:
-
-```bash
-npm install -g elementor-mcp-agent
-```
-
 ## Configure
 
-The server needs to know about your sites. The simplest path: an env var with a JSON array.
-
 ```bash
-export ELEMENTOR_MCP_SITES='[
-  {
-    "id": "client-acme",
-    "url": "https://acme.example.com",
-    "username": "admin",
-    "application_password": "xxxx xxxx xxxx xxxx xxxx xxxx"
-  },
-  {
-    "id": "client-beta",
-    "url": "https://beta.example.com",
-    "username": "admin",
-    "application_password": "yyyy yyyy yyyy yyyy yyyy yyyy"
+export ELEMENTOR_MCP_SITES='[{
+  "id": "client-acme",
+  "url": "https://acme.example.com",
+  "username": "admin",
+  "application_password": "xxxx xxxx xxxx xxxx xxxx xxxx",
+  "ssh": {
+    "host": "host.example.com",
+    "user": "username",
+    "port": 22,
+    "path": "/path/to/wordpress",
+    "wp_cli_path": "wp"
   }
-]'
+}]'
 ```
 
-Generate the **WordPress Application Password** at:
-`https://{your-site}/wp-admin/profile.php#application-passwords-section`
+Generate the **WordPress Application Password** at `https://{your-site}/wp-admin/profile.php#application-passwords-section`.
 
-(`Application Passwords` is a built-in WordPress 5.6+ feature. No plugin required.)
+The `ssh` block is **optional** but unlocks **8 additional tools** (WP-CLI escape hatch + reliable custom-postmeta backups). The MCP works without SSH — backups go to local JSON files instead.
 
-Or use a config file:
+`wp_cli_path` auto-detects if omitted (tries `wp`, then `~/bin/wp.phar`, then `~/wp-cli.phar`).
 
-```bash
-export ELEMENTOR_MCP_CONFIG_PATH="/path/to/sites.json"
-```
-
-With `sites.json`:
-```json
-{
-  "sites": [
-    { "id": "...", "url": "...", "username": "...", "application_password": "..." }
-  ],
-  "default_site_id": "client-acme",
-  "rate_limit_per_minute": 60,
-  "confirmation_ttl_seconds": 60
-}
-```
-
-### Configure Claude Desktop
-
-`~/Library/Application Support/Claude/claude_desktop_config.json`:
+### Claude Desktop config
 
 ```json
 {
@@ -96,91 +62,114 @@ With `sites.json`:
       "command": "npx",
       "args": ["-y", "elementor-mcp-agent"],
       "env": {
-        "ELEMENTOR_MCP_SITES": "[{\"id\":\"acme\",\"url\":\"https://acme.com\",\"username\":\"admin\",\"application_password\":\"xxxx...\"}]"
+        "ELEMENTOR_MCP_SITES": "[{\"id\":\"acme\",\"url\":\"https://acme.com\",\"username\":\"admin\",\"application_password\":\"...\"}]"
       }
     }
   }
 }
 ```
 
-### Configure Claude Code
+---
 
-```bash
-claude mcp add elementor \
-  -e ELEMENTOR_MCP_SITES='[{"id":"acme","url":"https://acme.com","username":"admin","application_password":"xxxx..."}]' \
-  -- npx -y elementor-mcp-agent
+## Tools (24)
+
+### Sites & health
+- `list_sites` — enumerate the pool
+- `ping_site` — auth + version probe
+- `site_health` — multi-call health snapshot
+
+### Pages
+- `list_elementor_pages` — pages in builder mode
+- `read_page_elementor` — parsed summary + optional full tree
+- `list_widgets_in_page` — flat widget inventory with excerpts
+- `list_global_widgets` — shared widgets (edit one → affects every page using it)
+- `preflight_check` — validate a page is safe to edit
+- `elementor_find_replace` — text replace with **dry-run → token → apply → backup → validate → rollback if invalid**
+- `list_elementor_backups` / `restore_elementor_backup` — full restore chain with pre-restore safety backup
+- `duplicate_elementor_page` — clone within a site (data + page_settings + edit_mode)
+
+### Templates
+- `list_elementor_templates` — Theme Builder distinguished from regular library
+- `export_elementor_template` — portable JSON
+- `import_elementor_template` — drop into target site
+- `apply_template_to_page` — push template data onto an existing page
+
+### WP-CLI escape hatch (require SSH)
+- `wp_cli_run` — arbitrary wp-cli command with destructive-pattern detection + confirmation
+- `wp_search_replace` — `wp search-replace` with mandatory dry-run
+- `wp_elementor_flush_css` — 3-level fallback
+- `wp_plugin_list` / `wp_plugin_update` (with confirmation)
+
+### Visual
+- `screenshot_page` — headless Chrome PNG of any URL
+- `compare_screenshots` — SHA-256 + byte-delta
+
+### Fleet
+- `check_elementor_versions` — flag outdated installs against wordpress.org latest
+
+---
+
+## Safety guarantees
+
+Hardcoded in `src/elementor/policies.ts`:
+
+```ts
+BACKUP_BEFORE_WRITE                 = true
+BACKUP_PAGE_SETTINGS                = true
+VALIDATE_JSON_AFTER_EDIT            = true
+BLOCK_GLOBAL_WIDGET_WRITES_BY_DEFAULT = true
+CONFIRMATION_TTL_SECONDS            = 60
+GLOBAL_WIDGET_CONFIRMATION_TTL_SECONDS = 30
+FLUSH_CSS_AFTER_WRITE               = true
+MAX_ELEMENTOR_DATA_BYTES            = 5_000_000
 ```
 
----
-
-## Tools (v0.1)
-
-| Tool | What it does |
-|---|---|
-| `list_sites` | Lists every site in the pool (id, url, username, has_ssh). |
-| `ping_site` | Verifies auth + reports WP / Elementor / Elementor Pro versions. |
-| `list_elementor_pages` | Lists pages built with Elementor on a given site. |
-| `read_page_elementor` | Returns a structured summary of a page's `_elementor_data` (widget counts by type, depth). Full tree with `verbose=true`. |
-| `elementor_find_replace` | Find/replace plain text in every widget on a page. **Two-call destructive flow**: dry-run returns a count + token; second call with token applies after auto-backup. |
-| `list_elementor_templates` | Lists library templates (sections, pages, popups, headers, footers). |
-| `export_elementor_template` | Exports a template as portable JSON. |
-| `import_elementor_template` | Imports a portable JSON template into a target site. |
-| `check_elementor_versions` | Fleet-wide Elementor version audit. Flags outdated installs against wordpress.org latest. |
-
-## Resources
-
-The server exposes a hand-curated set of Elementor reference docs as MCP `resources`, so the LLM can look up hook names, widget structure, and safe editing patterns without leaving its context:
-
-- `elementor-docs://hooks-actions.md` — common action hooks + filters
-- `elementor-docs://widget-structure.md` — `_elementor_data` schema + common widget types
-- `elementor-docs://safe-editing.md` — backup, dry-run, CSS flush patterns
+And these wp-cli patterns are **hard-blocked** regardless of confirmation:
+- `rm -rf`
+- `sudo *`
+- `db reset --yes` / `db drop --yes`
 
 ---
 
-## Safety patterns
+## End-to-end verified
 
-Every destructive operation follows the same dance:
+v1.0.0 was tested in real conditions against a live WordPress install with Elementor 4.0.9:
 
-1. **First call** (no `confirmation` arg) → dry-run. Returns `match_count` + `confirmation_token` (TTL 60s, configurable).
-2. **Second call** (same args + token) → applies after backing up the page's `_elementor_data` to a timestamped postmeta key.
-3. **CSS flush** is triggered automatically (REST `/elementor/v1/css?action=regenerate`, falls back to re-save).
+- ✅ 21/24 tools validated end-to-end
+- ✅ find_replace → backup → restore round-trip preserves data
+- ✅ duplicate_page copies data + page_settings + edit_mode
+- ✅ apply_template_to_page with auto-backup
+- ✅ wp_cli_run destructive flow (post delete) requires confirmation
+- ✅ screenshots identical detection via SHA-256
+- ✅ CSS flush uses `wp elementor flush-css` when SSH available, falls back to option-delete otherwise
 
-The backup is **never deleted** — purge old `_elementor_data_backup_*` postmeta keys yourself when no longer needed.
-
----
-
-## Rate limiting
-
-Per-site token bucket, default **60 req/min** (matches what most managed WordPress hosts allow on `wp-json`). Override via `rate_limit_per_minute` in config.
+7 bugs found during testing, all fixed:
+- REST API silently drops unregistered postmeta writes → switched to WP-CLI primary for backups
+- `wp` not in SSH PATH on managed hosts → auto-detection + `wp_cli_path` config
+- SSH post-quantum banner pollution → stderr filter
+- Default Kit returned as "widget" → client-side filter
+- `_elementor_page_settings` type object/string mismatch → normalisation
+- Chrome cold-start screenshot timeout → bumped to 60s
+- Templates listing same filter bug → fixed
 
 ---
 
 ## Roadmap
 
-**v0.2**
-- [ ] `widget_swap` — replace one widget by another with field mapping
-- [ ] `restore_elementor_backup` — restore a page from a timestamped backup
-- [ ] `bulk_find_replace` — apply find/replace across all pages of a site
-- [ ] WP-CLI runner via SSH for ops the REST API can't do
+**v1.1**
+- Widget-level CRUD: `read_widget`, `update_widget_settings`, `add_widget`, `delete_widget`, `swap_widget_type`
+- `bulk_find_replace_site` (across all Elementor pages of one site)
+- `restore_from_file` tool
 
-**v0.3**
-- [ ] Cross-site template push (`push_template_to_all`)
-- [ ] Fleet health: outdated plugins, broken links, PageSpeed snapshot
-- [ ] Visual diff (screenshot before/after)
-- [ ] Elementor Pro version detection from Pro server (currently free-only)
+**v1.2**
+- `fleet_find_replace` (across all sites in pool)
+- Global styles read/write
+- Theme Builder template push across sites
 
-**v1.0**
-- [ ] Mature widget mutation API (typed setters per widget type)
-- [ ] Automated docs ingestion from developer.elementor.com
-- [ ] Per-tool happy-path tests against a real Elementor install
-
----
-
-## Architecture
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full design rationale.
-
-Short version: stdio MCP, Zod-validated tools, token-bucket throttling, confirmation tokens for destructive ops, pino logs to stderr (never stdout), tsup bundle, vitest tests.
+**v2.0**
+- WooCommerce-aware tools
+- Visual diff (pixel comparison)
+- Schedule + cron scheduling
 
 ---
 

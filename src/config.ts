@@ -13,6 +13,7 @@ const SiteSchema = z.object({
       port: z.coerce.number().int().min(1).max(65535).default(22),
       path: z.string().describe("WP root path on remote, e.g. ~/sites/example.com"),
       key_path: z.string().optional().describe("absolute path to private key"),
+      wp_cli_path: z.string().optional().describe("Explicit wp-cli invocation prefix. Examples: 'wp' (default, if wp is in PATH), 'php ~/bin/wp.phar', '/usr/local/bin/wp'. Auto-detected if omitted."),
     })
     .optional(),
 });
