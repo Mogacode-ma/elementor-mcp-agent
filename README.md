@@ -123,6 +123,35 @@ The `ssh` block is **optional** but unlocks **8 additional tools** (WP-CLI escap
 
 ---
 
+## Post-write verification (v1.2)
+
+Every mutating widget tool re-reads the page from canonical WP **after the
+write** and surfaces persisted state to the model. The HTTP write API can
+lie — return 200 OK while plugin filters or REST quirks silently drop the
+payload. This contract makes that observable.
+
+Every `applied` response carries:
+
+```jsonc
+{
+  "mutated": true,                  // false = no-op OR silent drop
+  "warnings": [],                   // non-fatal issues
+  "verification": {
+    "method": "Re-read /wp/v2/pages/42 and check widget abc settings…",
+    "reread_ok": true,
+    "matches_requested": true,      // false = write API lied
+    "persisted": { /* canonical state */ },
+    "notes": "…explanation when something diverged"
+  }
+}
+```
+
+If `verification.matches_requested === false`, treat as a failure even if
+the HTTP layer said OK. The original payload survives in
+`backup_meta_key` — restore via `restore_elementor_backup`.
+
+---
+
 ## Safety guarantees
 
 Hardcoded in `src/elementor/policies.ts`:

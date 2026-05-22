@@ -1,5 +1,46 @@
 # Changelog
 
+## 1.2.0 — Post-write verification (never trust the write API)
+
+Every mutating widget tool now re-reads the page from canonical WP after the
+write and runs an operation-specific predicate against persisted state.
+The response carries a structured `verification` block that surfaces ground
+truth to the model, so it can't be fooled by an optimistic HTTP 200.
+
+Triggered by Mads Hansen's comment on the v1.0 post-mortem
+([dev.to thread](https://dev.to/mogacode/7-bugs-i-caught-in-my-mcp-server-before-publishing-and-why-i-almost-shipped-a-data-corruption-5dfd)):
+a mutating MCP tool MUST force the model to see ground truth, not the write
+API's optimistic acknowledgement.
+
+### Contract change (additive, backwards-compatible)
+
+Every `update_widget_settings`, `delete_widget`, `duplicate_widget`,
+`swap_widget_type`, `add_widget`, and `move_widget` `applied` response now
+includes:
+
+```jsonc
+{
+  // …legacy fields unchanged…
+  "mutated": true,            // false = no-op OR silent drop (see verification)
+  "warnings": [],             // non-fatal issues (always an array)
+  "verification": {
+    "method": "Re-read /wp/v2/pages/42 and check widget abc settings include the requested patch",
+    "reread_ok": true,
+    "matches_requested": true,  // false = write API lied, treat as failure
+    "persisted": { /* op-specific: the canonical state we read back */ },
+    "notes": "…explanation when matches_requested is false"
+  }
+}
+```
+
+If `verification.matches_requested === false`, the tool's write claim is
+unreliable — the REST API or a plugin filter silently dropped or mutated the
+payload. The model should escalate / rollback regardless of HTTP status.
+
+### New module
+- `src/elementor/verify.ts` — `verifyWrite()` generic primitive + `deepEqual`
+- 4 new unit tests (27 total, all green)
+
 ## 1.1.0 — Widget-level CRUD + bulk/fleet ops
 
 10 new tools, all reusing the v1.0 safety primitives (backup → validate → flush → auto-rollback).
