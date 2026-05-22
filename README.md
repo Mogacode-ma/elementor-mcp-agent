@@ -71,7 +71,7 @@ The `ssh` block is **optional** but unlocks **8 additional tools** (WP-CLI escap
 
 ---
 
-## Tools (24)
+## Tools (34)
 
 ### Sites & health
 - `list_sites` — enumerate the pool
@@ -103,6 +103,20 @@ The `ssh` block is **optional** but unlocks **8 additional tools** (WP-CLI escap
 ### Visual
 - `screenshot_page` — headless Chrome PNG of any URL
 - `compare_screenshots` — SHA-256 + byte-delta
+
+### Widgets (v1.1 — widget-level CRUD)
+- `read_widget` — fetch one widget by id (read-only)
+- `update_widget_settings` — shallow-merge settings, with backup + validate + flush
+- `delete_widget` — remove a widget from its parent container
+- `duplicate_widget` — clone as sibling with fresh id
+- `swap_widget_type` — replace widgetType + settings, preserve id + position
+- `add_widget` — append a widget into a parent container
+- `move_widget` — move a widget between containers (with position)
+
+### Bulk & fleet (v1.1)
+- `bulk_find_replace_site` — find/replace across every Elementor page of one site, per-page backup + validate + flush
+- `fleet_find_replace` — same across **every site in the pool** (sequential, dry-run mandatory)
+- `restore_from_file` — restore `_elementor_data` from a JSON file backup, with pre-restore safety backup
 
 ### Fleet
 - `check_elementor_versions` — flag outdated installs against wordpress.org latest
@@ -156,15 +170,16 @@ v1.0.0 was tested in real conditions against a live WordPress install with Eleme
 
 ## Roadmap
 
-**v1.1**
-- Widget-level CRUD: `read_widget`, `update_widget_settings`, `add_widget`, `delete_widget`, `swap_widget_type`
+**v1.1** ✅ shipped
+- Widget-level CRUD: `read_widget`, `update_widget_settings`, `delete_widget`, `duplicate_widget`, `swap_widget_type`, `add_widget`, `move_widget`
 - `bulk_find_replace_site` (across all Elementor pages of one site)
-- `restore_from_file` tool
+- `fleet_find_replace` (across all sites in pool)
+- `restore_from_file`
 
 **v1.2**
-- `fleet_find_replace` (across all sites in pool)
 - Global styles read/write
 - Theme Builder template push across sites
+- Section/column-level operations
 
 **v2.0**
 - WooCommerce-aware tools

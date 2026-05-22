@@ -1,6 +1,6 @@
 {
   "name": "elementor-mcp-agent",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "mcpName": "io.github.Mogacode-ma/elementor-mcp-agent",
   "description": "Agentic MCP server for WordPress Elementor \u2014 multi-site management, safe Elementor data editing, template import/export, CSS flush, version tracking. Built for agencies running many client sites.",
   "type": "module",

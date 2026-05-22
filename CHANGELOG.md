@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.1.0 — Widget-level CRUD + bulk/fleet ops
+
+10 new tools, all reusing the v1.0 safety primitives (backup → validate → flush → auto-rollback).
+
+### Widget-level CRUD (7 tools)
+- `read_widget` — fetch one widget by id (read-only)
+- `update_widget_settings` — shallow-merge settings on a widget, with full safety flow
+- `delete_widget` — remove a widget from its parent container
+- `duplicate_widget` — clone as a sibling with a fresh Elementor-shaped id
+- `swap_widget_type` — replace widgetType + settings while preserving id + position
+- `add_widget` — append a new widget into a parent container
+- `move_widget` — move a widget between containers (sections/columns) with optional position
+
+### Bulk & fleet (3 tools)
+- `bulk_find_replace_site` — iterate every Elementor page on one site; per-page backup, validate, flush
+- `fleet_find_replace` — same across every site in the pool, sequential to avoid concurrent writes
+- `restore_from_file` — restore `_elementor_data` from a JSON file backup, with pre-restore safety backup
+
+### Internal
+- New `src/elementor/widget-ops.ts` with 9 unit tests
+- Shared `fetchData()` / `writeData()` helpers wrap the v1.0 backup + validator chain
+- Total tools: 24 → 34
+
 ## 1.0.0 — Agency-grade release
 
 First production-ready release. 24 tools, end-to-end verified against a live WordPress + Elementor install.
