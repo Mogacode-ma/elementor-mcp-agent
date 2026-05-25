@@ -2,6 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/elementor-mcp-agent.svg)](https://www.npmjs.com/package/elementor-mcp-agent)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Mogacode-ma/elementor-mcp-agent MCP server](https://glama.ai/mcp/servers/Mogacode-ma/elementor-mcp-agent/badges/score.svg)](https://glama.ai/mcp/servers/Mogacode-ma/elementor-mcp-agent)
 
 > **Agency-grade MCP server for WordPress Elementor.** Multi-site management, safe Elementor edits with backup + auto-rollback + CSS flush, template export/import, global widget detection, screenshots, WP-CLI escape hatch.
 
